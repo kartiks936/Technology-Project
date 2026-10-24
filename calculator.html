@@ -14,28 +14,28 @@
         min-height: 100vh;
         display: grid;
         place-items: center;
+        background: linear-gradient(135deg, #dfe9f3, #f6f9ff);
         font-family: Arial, Helvetica, sans-serif;
-        background: linear-gradient(135deg, #e0f7fa, #f5f5f5);
       }
 
       .calculator {
         width: 320px;
         background: #ffffff;
         border-radius: 18px;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.15);
         padding: 20px;
       }
 
       .display {
         width: 100%;
-        height: 70px;
-        background: #1f2937;
-        color: #ffffff;
+        height: 72px;
         border: none;
         border-radius: 12px;
-        font-size: 2rem;
+        background: #1f2937;
+        color: white;
         text-align: right;
-        padding: 10px 15px;
+        font-size: 2rem;
+        padding: 12px 14px;
         margin-bottom: 16px;
       }
 
@@ -52,25 +52,25 @@
         font-size: 1.2rem;
         font-weight: bold;
         cursor: pointer;
-        transition: transform 0.1s ease, opacity 0.2s ease;
+        transition: transform 0.08s ease, opacity 0.2s ease;
       }
 
       button:hover {
-        opacity: 0.96;
+        opacity: 0.97;
       }
 
       button:active {
         transform: scale(0.98);
       }
 
-      .operator {
-        background: #dbeafe;
-        color: #1d4ed8;
-      }
-
       .number {
         background: #f3f4f6;
         color: #111827;
+      }
+
+      .operator {
+        background: #dbeafe;
+        color: #1d4ed8;
       }
 
       .equal {
@@ -86,28 +86,28 @@
   </head>
   <body>
     <div class="calculator">
-      <input class="display" id="display" type="text" readonly value="0" />
+      <input class="display" id="display" type="text" value="0" readonly />
 
       <div class="buttons">
-        <button class="clear" onclick="clearDisplay()">C</button>
+        <button class="clear" onclick="clearAll()">C</button>
         <button class="operator" onclick="deleteLast()">⌫</button>
-        <button class="operator" onclick="appendOperator('%')">%</button>
-        <button class="operator" onclick="appendOperator('/')">÷</button>
+        <button class="operator" onclick="chooseOperator('%')">%</button>
+        <button class="operator" onclick="chooseOperator('/')">÷</button>
 
         <button class="number" onclick="appendNumber('7')">7</button>
         <button class="number" onclick="appendNumber('8')">8</button>
         <button class="number" onclick="appendNumber('9')">9</button>
-        <button class="operator" onclick="appendOperator('*')">×</button>
+        <button class="operator" onclick="chooseOperator('*')">×</button>
 
         <button class="number" onclick="appendNumber('4')">4</button>
         <button class="number" onclick="appendNumber('5')">5</button>
         <button class="number" onclick="appendNumber('6')">6</button>
-        <button class="operator" onclick="appendOperator('-')">−</button>
+        <button class="operator" onclick="chooseOperator('-')">−</button>
 
         <button class="number" onclick="appendNumber('1')">1</button>
         <button class="number" onclick="appendNumber('2')">2</button>
         <button class="number" onclick="appendNumber('3')">3</button>
-        <button class="operator" onclick="appendOperator('+')">+</button>
+        <button class="operator" onclick="chooseOperator('+')">+</button>
 
         <button class="number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
         <button class="number" onclick="appendNumber('.')">.</button>
@@ -117,54 +117,74 @@
 
     <script>
       const display = document.getElementById('display');
-      let currentInput = '0';
-      let firstValue = null;
+
+      let displayValue = '0';
+      let firstOperand = null;
       let operator = null;
-      let waitingForSecondValue = false;
+      let waitingForSecondOperand = false;
 
       function updateDisplay() {
-        display.value = currentInput;
+        display.value = displayValue;
       }
 
-      function clearDisplay() {
-        currentInput = '0';
-        firstValue = null;
+      function clearAll() {
+        displayValue = '0';
+        firstOperand = null;
         operator = null;
-        waitingForSecondValue = false;
+        waitingForSecondOperand = false;
         updateDisplay();
       }
 
       function deleteLast() {
-        if (currentInput.length > 1) {
-          currentInput = currentInput.slice(0, -1);
+        if (displayValue.length > 1) {
+          displayValue = displayValue.slice(0, -1);
         } else {
-          currentInput = '0';
+          displayValue = '0';
         }
         updateDisplay();
       }
 
-      function appendNumber(value) {
-        if (waitingForSecondValue) {
-          currentInput = value;
-          waitingForSecondValue = false;
+      function appendNumber(number) {
+        if (displayValue === 'Error') {
+          displayValue = '0';
+        }
+
+        if (waitingForSecondOperand) {
+          displayValue = number;
+          waitingForSecondOperand = false;
         } else {
-          currentInput = currentInput === '0' ? value : currentInput + value;
+          displayValue = displayValue === '0' ? number : displayValue + number;
+        }
+
+        updateDisplay();
+      }
+
+      function appendDecimal() {
+        if (waitingForSecondOperand) {
+          displayValue = '0.';
+          waitingForSecondOperand = false;
+        } else if (!displayValue.includes('.')) {
+          displayValue += '.';
         }
         updateDisplay();
       }
 
-      function appendOperator(nextOperator) {
-        const inputValue = parseFloat(currentInput);
+      function chooseOperator(nextOperator) {
+        const inputValue = Number(displayValue);
 
-        if (firstValue === null) {
-          firstValue = inputValue;
+        if (displayValue === 'Error') {
+          return;
+        }
+
+        if (firstOperand === null) {
+          firstOperand = inputValue;
         } else if (operator) {
-          const result = performCalculation(firstValue, inputValue, operator);
-          currentInput = String(result);
-          firstValue = result;
+          const result = performCalculation(firstOperand, inputValue, operator);
+          displayValue = String(result);
+          firstOperand = result;
         }
 
-        waitingForSecondValue = true;
+        waitingForSecondOperand = true;
         operator = nextOperator;
         updateDisplay();
       }
@@ -180,26 +200,58 @@
           case '/':
             return second === 0 ? 'Error' : first / second;
           case '%':
-            return (first * second) / 100;
+            return second === 0 ? 'Error' : first % second;
           default:
             return second;
         }
       }
 
       function calculateResult() {
-        if (!operator || waitingForSecondValue) {
+        if (operator === null || waitingForSecondOperand) {
           return;
         }
 
-        const secondValue = parseFloat(currentInput);
-        const result = performCalculation(firstValue, secondValue, operator);
+        const secondOperand = Number(displayValue);
+        const result = performCalculation(firstOperand, secondOperand, operator);
 
-        currentInput = String(result);
-        firstValue = null;
+        displayValue = String(result);
+        firstOperand = null;
         operator = null;
-        waitingForSecondValue = false;
+        waitingForSecondOperand = false;
         updateDisplay();
       }
+
+      document.querySelector(".number[data-value='."]")?.addEventListener('click', appendDecimal);
+
+      document.addEventListener('keydown', (event) => {
+        if (/^[0-9]$/.test(event.key)) {
+          appendNumber(event.key);
+        }
+
+        if (event.key === '.') {
+          appendDecimal();
+        }
+
+        if (['+', '-', '*', '/'].includes(event.key)) {
+          chooseOperator(event.key);
+        }
+
+        if (event.key === '%') {
+          chooseOperator('%');
+        }
+
+        if (event.key === 'Enter' || event.key === '=') {
+          calculateResult();
+        }
+
+        if (event.key === 'Backspace') {
+          deleteLast();
+        }
+
+        if (event.key === 'Escape') {
+          clearAll();
+        }
+      });
 
       updateDisplay();
     </script>
